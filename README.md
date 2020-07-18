@@ -17,7 +17,9 @@ Installing the tool:
 after downloading te tool do:
 
 chmod +x setup.sh
+
 chmod +x lazy
+
 ./setu.sh
 
 then use the tool anywhere by typing the command lazy
