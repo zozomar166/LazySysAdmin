@@ -1,0 +1,446 @@
+#Author: Aziz Taha
+#Name: LazySysAdmin V1.0 BETA
+#Date: 4/7/2020
+#Description: LazySysAdmin is a tool that will provide to you an easy way to do
+#	      most of teh work that you will do daily as a SysAdmin
+#	      including manging users and groups,  mointoring services
+#	      doing backups and reviewing sysLogs and filtering them
+
+# ~ Talk is cheap... show me the code ~'
+
+#Donation: 1$ will make a shell scripter happy <3
+#Payeer: P1009557610
+#BTC: 1Pu8UFsuxMDfiKbqtXZBMg816HGRMjGe7y
+
+#!bin/bash
+function main {
+	mainOpt=0
+	clear
+	mainOpt=$(dialog --backtitle "Hi lazy :D <3" --title "Main menu" --stdout --menu "Choose option" 20 30 15 1 "backup and restore" 2 "Users and groups" 3 "SysLogs" 4 "Services" 5 "About us")
+}
+
+function backupMain {
+	backupMainOpt=0
+	clear
+	backupMainOpt=$(dialog --backtitle "BACKUP SECTION" --title "Backup" --stdout --menu "Choose option" 20 30 15 1 "Do a backup" 2 "Do a restore" 3 "Browse backups" 4 "Delete a backup")
+}
+
+function usersMain {
+	usersMainOpt=0
+	clear
+	usersMainOpt=$(dialog --backtitle 'USERS AND GROUPS SECTION' --title "Users and groups" --stdout --menu 'Choose option' 20 50 15 1 'Create a user' 2 'Create a user w/pass' 3 'Create a users w/home' 4 'Create a user w/(home + pass)' 5 'list of all users + groups are in' 6 'Show info about a specific user' 7 'create a group' 8 'Delete a group' 9 'list all groups' 10 'Change a group name' )
+}
+
+function Syslogs {
+	SyslogsMainOpt=0
+	clear
+	SyslogsMainOpt=$(dialog --backtitle "LOGS" --title "SysLogs" --stdout --menu "Choose option" 20 50 15 1 "Show logs from a date to a date" 2 "show logs by priority" 3 "list boots" 4 "show logs for a specific boot" 5 "search for a keyword in the logs")
+}
+
+function Services {
+	servicesOpt=0
+	clear
+	servicesOpt=$(dialog --backtitle "SERVICES" --title "Services" --stdout --menu "Choose option" 20 30 15 1 "List all services" 2 "start a service" 3 "stop a service")
+}
+
+function exitStat {
+	clear
+	dialog --timout 1 --msgbox "Exiting the tool... See you lazy !" 20 30
+	clear
+	exit
+}
+
+
+while [ 1 ] ; do
+	main
+	case $mainOpt in
+		1)
+			backupMain
+			case $backupMainOpt in
+				1)
+					name=0
+					dirBack=0
+					if [ ! -d "$HOME/backup" ]; then
+						mkdir "$HOME/backup"
+					fi
+					clear
+					dialog --backtitle "BACKUP SECTION" --title "Choose a dir" --dselect $HOME 15 15 2> temp1
+					dirBack=$(cat temp1)
+					clear
+					dialog --backtitle "BACKUP SECTION" --inputbox "enter the name of the backup file" 20 30 2> temp2
+					name=$(cat temp2)
+					tar -cvf "$HOME/backup/$name" "$dirBack"
+					gzip "$HOME/backup/$name"
+					clear
+					rm -rvf temp1 temp2
+					dialog --backtitle "BACKUP SECTION" --title "Alert" --timeout 3 --msgbox "Backup is done <3" 20 30
+				;;
+				2)
+					clear
+					if [ ! -d "$HOME/restored" ]; then
+						mkdir "$HOME/restored"
+					fi
+					dialog --backtitle "BACKUP SECTION" --title "Choose a backup" --fselect $HOME/backup/ 0 0 2> temp
+					name=$(cat temp)
+					cp "$name" "$HOME/restored/"
+					gName=${name##*/}
+					gunzip "$HOME/restored/$gName"
+					rm -rvf temp 
+					dialog --backtitle "BACKUP SECTION" --title "Alert" --timeout 2 --msgbox "Restore is done <3" 20 30
+				;;
+				3)
+					clear
+					ls -lth "$HOME/backup" | gawk '{print $5" -- "$6" -- "$7" -- "$8" -- "$9}' > temp
+					dialog --backtitle "BACKUP SECTION" --title "Size/month/day/time/name" --scrollbar --textbox temp 20 50
+					rm -rvf temp
+				;;
+				4)
+					clear
+					dialog --backtitle "BACKUP SECTION" --title "Choose a backup to delete" --fselect "$HOME/backup/" 0 0 2> temp
+					del=$(cat temp)
+					rm -rvf "$del"
+					dialog --backtitle "BACKUP SECTION" --title "Alert" --timeout 2 --msgbox "Backup is deleted <3" 20 30
+					rm -rvf temp
+				;;
+				*)
+					clear
+				;;
+			esac
+		;;
+		2)
+			usersMain
+			case $usersMainOpt in
+				1)
+					clear
+					dialog --backtitle "USERS AND GROUPS" --title "Add a user" --inputbox "Enter a username" 20 30 2> temp
+					Name=$(cat temp)
+					useradd $Name
+					if [ $? -eq 0 ]; then
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "User $Name has been added" 20 30
+					else
+						clear
+						dialog --backtitle "USERS AND GOROUPS" --title "Alert" --msgbox "User $Name already exists !" 20 30
+					fi
+					rm -rvf temp
+				;;
+				2)
+					clear
+                                        dialog --backtitle "USERS AND GROUPS" --title "Add a user" --inputbox "enter a username" 20 30 2> temp
+                                        Name=$(cat temp)
+					grep "$Name" /etc/passwd 
+                                        if [ $? -eq 0 ]; then
+                                                clear
+                                                dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "User already exists ! " 20 30
+                                        else
+                                                clear
+                                                dialog --backtitle "USERS AND GROUPS" --title "Add a password" --insecure --passwordbox "password for the user $Name" 20 30 2> temp
+						Pass=$(cat temp)
+						useradd "$Name" -p "$Pass"
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "User $Name has been added !" 20 30 
+                                        fi
+					rm -rvf temp
+				;;
+				3)
+					clear
+                                        dialog --backtitle "USERS AND GROUPS" --title "Add a user" --inputbox "enter a username" 20 30 2> temp
+                                        Name=$(cat temp)
+                                        grep "$Name" /etc/passwd
+                                        if [ $? -eq 0 ]; then
+                                                clear
+                                                dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "User already exists ! " 20 30
+                                        else
+						useradd -m "$Name"
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "User $Name has been added !" 20 30
+					fi
+					rm -rvf temp
+				;;
+				4)
+					clear
+                                        dialog --backtitle "USERS AND GROUPS" --title "Add a user" --inputbox "enter a username" 20 30 2> temp
+                                        Name=$(cat temp)
+                                        grep "$Name" /etc/passwd
+                                        if [ $? -eq 0 ]; then
+                                                clear
+                                                dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "User already exists ! " 20 30
+                                        else
+                                                clear
+                                                dialog --backtitle "USERS AND GROUPS" --title "Add a password" --insecure --passwordbox "password for the user $Name" 20 30 2> temp
+                                                Pass=$(cat temp)
+                                                useradd -m "$Name" -p "$Pass"
+                                                clear
+                                                dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "User $Name has been added !" 20 30
+                                        fi
+                                        rm -rvf temp
+
+				;;
+				5)
+					clear
+					egrep [1-9]?[[:digit:]] /etc/passwd | cut -d: -f 3 > temp
+					y=$(cat temp)
+					for t in $y; do
+					        if [ $t -ge 1000 -a $t -le 60000 ]; then
+					                grep $t /etc/passwd | cut -d: -f1 >> tempo
+					        fi
+					done
+					for user in `cat tempo`; do
+					        echo "user $user groups: " `id -nG "$user"` >> tempo1
+					done
+					nl tempo1 > tempo2
+					dialog --backtitle "USERS AND GROUPS" --title "List of users" --textbox "tempo2" 20 80 
+					rm -rvf temp tempo tempo1 tempo2 &> /dev/null
+				;;
+				6)
+					clear 
+					dialog --backtitle "USERS AND GROUPS" --title "Info about a user" --inputbox "Enter a username" 20 30 2> temp
+					y=$(cat temp)
+					grep $y /etc/passwd
+					if [ ! $? -eq 0 ]; then
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "User $y does not exist !" 20 30
+					else
+						echo $y >> tempo
+						echo "UID: " `id -u` >> tempo
+						echo "list of groups that the user in: " >> tempo
+						echo `id -nG $y` >> tempo
+						echo "does the user have a home dir ?: " >> tempo
+						if [ -d "/home/$y" ]; then
+							echo "YES" >>tempo 
+						else
+							echo "NO" >> tempo
+						fi
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "INFO" --textbox "tempo" 20 70
+					fi
+					rm -rvf temp tempo
+				;;
+				7)
+					clear
+					dialog --backtitle "USERS AND GROUPS" --title "Create a group" --inputbox "Type the group name" 20 30 2> temp
+					y=$(cat temp)
+					grep $y /etc/group
+					if [ $? -eq 0 ]; then
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "The group $y already exists !" 20 30
+					else
+						groupadd "$y"
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "Group $y has been added !" 20 30
+					fi
+					rm -rvf temp
+				;;
+				8)
+					clear
+					dialog --backtitle "USERS AND GROUPS" --title "Delete a group" --inputbox "Enter a group name you want to delete" 20 30 2> temp
+					y=$(cat temp)
+					grep $y /etc/group
+					if [ ! $? eq 0 ]; then
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "Group $y does not exist !" 20 30
+					else
+						groupdel "$y"
+						if [ ! $? -eq 0 ]; then
+							clear
+							dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "Group $y can't be removed either it's a root group or a primary Group for a user !" 20 30
+						else
+							clear
+							dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "Group $y has been removed !" 20 30
+						fi
+					fi
+					rm -rvf temp
+				;;
+				9)
+					clear
+					cat /etc/group | cut -d: -f3 > temp
+					for y in `cat temp`; do
+						if [ $y -ge 1000 -a $y -le 60000 ]; then
+							grep $y /etc/group | cut -d: -f1 >> tempo1
+						fi
+					done
+					dialog --backtitle "USERS AND GROUPS" --title "Groups" --textbox "tempo1" 20 30
+					rm -rvf temp tempo1
+				;;
+				10)
+					clear
+					dialog --backtitle "USERS AND GROUPS" --title "Change a group name" --inputbox "Enter a group name you want to change it's name" 20 30 2> temp
+					y=$(cat temp)
+					grep $y /etc/group
+					if [ ! $? -eq 0 ]; then
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "Group $y does not exist !" 20 30
+					else
+						clear
+						dialog --backtitle "USERS AND GROUPS" --title "New group name" --inputbox "Enter a new group name for $y" 20 30 2> temp1
+						x=$(cat temp1)
+						groupmod -n "$x" "$y"
+						if [ ! $? -eq 0 ]; then
+							clear
+							dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "An Error happened" 20 30
+						else
+							clear
+							dialog --backtitle "USERS AND GROUPS" --title "Alert" --msgbox "name changing is done !" 20 30
+						fi
+					fi
+					rm -rvf temp temp1
+				;;
+				*)
+					exitStat
+				;;
+			esac
+		;;
+		3)
+			Syslogs
+			case $SyslogsMainOpt in
+				1)
+					clear
+					dialog --backtitle "LOGS" --title "Alert" --msgbox "you will be asked for a start date and an end date" 20 30
+					clear
+					dialog --backtitle "LOGS" --title "Start date" --date-format "%Y-%m-%d" --calendar "Start date" 0 0 2> start
+					clear
+					dialog --backtitle "LOGS" --title "End Date" --date-format "%Y-%m-%d" --calendar "Start date" 0 0 2> end
+					clear
+					x=$(cat start)
+					y=$(cat end)
+					journalctl --since "$x" --until "$y" > temp
+					if [ $? -eq 1 ]; then
+						dialog --backtitle "LOGS" --title "Alert" --msgbox "You can't pick an end date before a start date" 20 30
+					else
+						cp temp "$HOME/logDate2Date"
+						dialog --backtitle "LOGS" --title "Alert" --msgbox "The log file has been saved in $HOME/logDate2Date" 20 30
+					fi
+					rm -rvf start end temp
+				;;
+				2)
+					clear
+					dialog --backtitle "LOGS" --title "Enter prio" --inputbox "enter priority:\n0 - emerg\n1 - alert\n2 - crit\n3 - err\n4 - warning\n5 - notice\n6 - info\n7 - debug" 20 30 2> temp
+					x=$(cat temp)
+					if [ "$x" -gt 7 -o "$x" -lt 0 ]; then
+						clear
+						dialog --backtitle "LOGS" --title "Alert" --msgbox "Wrong input" 20 30
+					else
+						journalctl -p"$x" > temp1
+						cp temp1 $HOME/logPrio
+						dialog --backtitle "LOGS" --title "Alert" --msgbox "Log file has been saved in $HOME/logPrio" 20 30
+						clear
+					fi
+					rm -rvf temp temp1
+				;;
+				3)
+					clear
+					dialog --backtitle "LOGS" --title "Alert" --msgbox "This may take a few seconds... press Enter" 20 30
+					journalctl --list-boots > temp
+					clear
+					dialog --backtitle "LOGS" --title "Boots" --textbox temp 20 100 
+					rm -rvf temp
+				;;
+				4)
+					clear
+					dialog --backtitle "LOGS" --title "Boot ID" --inputbox "Enter a boot ID ( make sure u had a look at boots in the last option)" 20 30 2> temp
+					x=$(cat temp)
+					journalctl -b"$x" > temp1
+					if [ $? -eq 1 ]; then
+						clear
+						dialog --backtitle "LOGS" --title "Alert" --msgbox "There is no Boot ID: $x" 20 30
+					else
+						clear
+						cp temp1 $HOME/logBootId
+						dialog --backtitle "LOGS" --title "Alert" --msgbox "log file has been saved in $HOME/logBootId" 20 30
+					fi
+					rm -rvf temp temp1
+				;;
+				5)
+					clear
+					dialog --backtitle "LOGS" --title "SysLogs search" --inputbox "Enter a word" 20 30 2> temp
+					x=$(cat temp)
+					journalctl | grep -i "$x" > temp1
+					if [ ! $? -eq 0 ]; then
+						clear
+						dialog --backtitle "LOGS" --title "Alert" --msgbox "The word $x was not found in the logs" 20 30
+					else
+						clear
+						cp temp1 $HOME/logSearching
+						dialog --backtitle "LOGS" --title "Alert" --msgbox "log file has been saved in $HOME/logSearching" 20 30
+					fi
+					rm -rvf
+				;;
+				*)
+					exitStat
+				;;
+			esac
+		;;
+		4)
+			Services
+			case $servicesOpt in
+				1)
+					clear
+					systemctl list-units --type="service" --all > temp
+					dialog --backtitle "SERVIES" --title "Services" --textbox temp 30 120
+					rm -rvf temp
+				;;
+				2)
+					clear
+					dialog --backtitle "SERVICES" --title "Alert" --msgbox "you will see a list of inactive services and then you have to type the number of the service you want to start" 20 30 
+					systemctl list-units --type="service" --all | grep inactive | grep loaded | nl > temp
+					dialog --backtitle "SERVICES" --title "Inactive services" --textbox temp 30 120  
+					clear
+					dialog --backtitle "SERVICES" --title "Start service" --inputbox "Enter a service number from the previous list" 20 30 2> temp1
+					x=$(cat temp1)
+					grep "$x" temp
+					if [ ! $? -eq 0 ]; then
+						clear
+						dialog --backtitle "SERVICES" --title "Alert" --msgbox "Wrong input" 20 30
+					else
+						clear
+						grep "$x" temp | gawk '{print $2}' > temp2
+						y=$(cat temp2)
+						systemctl start "$y"
+						if [ $? -eq 0 ]; then
+							dialog --backtitle "SERVICES" --title "Alert" --msgbox "Service $y has started" 20 30
+						else
+							dialog --backtitle "SERVICES" --title "Alert" --msgbox "problem while starting service $y" 20 30
+						fi
+					fi
+					rm -rvf temp temp1 temp2
+				;;
+				3)
+					clear
+                                        dialog --backtitle "SERVICES" --title "Alert" --msgbox "you will see a list of active services and then you have to type the number of the service you want to start" 20 30
+                                        systemctl list-units --type="service" --all | egrep -i [^in]active | grep loaded | nl > temp
+                                        dialog --backtitle "SERVICES" --title "active services" --textbox temp 30 120
+                                        clear
+                                        dialog --backtitle "SERVICES" --title "Start service" --inputbox "Enter a service number from the previous list" 20 30 2> temp1
+                                        x=$(cat temp1)
+                                        grep "$x" temp
+                                        if [ ! $? -eq 0 ]; then
+                                                clear
+                                                dialog --backtitle "SERVICES" --title "Alert" --msgbox "Wrong input" 20 30
+                                        else
+                                                clear
+                                                grep "$x" temp | gawk '{print $2}' > temp2
+                                                y=$(cat temp2)
+                                                systemctl stop "$y"
+                                                if [ $? -eq 0 ]; then
+                                                        dialog --backtitle "SERVICES" --title "Alert" --msgbox "Service $y has stopped" 20 30
+                                                else
+                                                        dialog --backtitle "SERVICES" --title "Alert" --msgbox "problem while stopping service $y" 20 30
+                                                fi
+                                        fi
+                                        rm -rvf temp temp1 temp2
+				;;
+				*)
+					exitStat
+				;;
+			esac
+		;;
+		5)
+			clear
+			dialog --backtitle "ABOUT US" --title "Info" --msgbox "Author: Aziz Taha\nName: LazySysAdmin V1.0 BETA\nDate: 4/7/2020\nDescription: LazySysAdmin is a tool that will provide to you an easy way to do\nmost of the work that you will do daily as a SysAdmin\nincluding manging users and groups,  mointoring services\ndoing backups and reviewing sysLogs and filtering them\n\n ~ Talk is cheap... show me the code ~\n\nDonation: 1$ will make a shell scripter happy <3\nPayeer: P1009557610\nBTC: 1Pu8UFsuxMDfiKbqtXZBMg816HGRMjGe7y \nNeed a shell script? Mail me!: \nzozomar158@gmail.com\nput the Mail subject (Shell script)" 30 60
+		;;
+		*)
+			exitStat
+		;;
+	esac
+done
+
