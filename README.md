@@ -14,7 +14,7 @@ $ sudo yum install dialog
 
 Installing the tool:
 
-after downloading te tool do:
+after downloading the tool do:
 
 chmod +x setup.sh
 
