@@ -5,6 +5,7 @@ this tool requires Dialog package to be installed
 To install the dialog utility in Debian or Ubuntu Linux, enter following command:
 
 $ sudo apt-get update
+
 $ sudo apt-get install dialog
 
 Similarly, enter the following command to install the utility dialog in CentOS or Red Hat Linux:
