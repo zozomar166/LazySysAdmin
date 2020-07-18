@@ -27,4 +27,5 @@ then use the tool anywhere by typing the command lazy
 $ lazy
 
 Copyrights 2020 Aziz Taha
-Enjoy <3
+
+Enjoy lazy <3
