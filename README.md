@@ -1,8 +1,8 @@
-a simple tool that wil use dialogs to administrate some simple functions in the Linux System
+a simple tool that will use dialogs to administrate some simple functions in the Linux System
 NOTE:
-this tool requires Dialog package to be installed
+this tool requires Dialog package installed
 
-To install the dialog utility in Debian or Ubuntu Linux, enter following command:
+To install the dialog utility in Debian or Ubuntu Linux, enter the following commands:
 
 $ sudo apt-get update
 
@@ -16,9 +16,9 @@ Installing the tool:
 
 after downloading the tool do:
 
-chmod +x setup.sh
+sudo chmod +x setup.sh
 
-chmod +x lazy
+sudo chmod +x lazy
 
 ./setup.sh
 
