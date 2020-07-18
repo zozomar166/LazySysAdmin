@@ -20,7 +20,7 @@ chmod +x setup.sh
 
 chmod +x lazy
 
-./setu.sh
+./setup.sh
 
 then use the tool anywhere by typing the command lazy
 
